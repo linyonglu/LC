@@ -11,7 +11,6 @@
  */
 var getRow = function(rowIndex) {
     const res = [];
-    // 2222
     // 3333
     // 4444
 
