@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        .traffic-light {
+            width: 120px;
+            background: #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .light {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 10px 0;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .light.active {
+            opacity: 1;
+        }
+
+        #red {
+            background: #c0392b;
+        }
+
+        #yellow {
+            background: #f1c40f;
+        }
+
+        #green {
+            background: #2ecc71;
+        }
+
+        #timer {
+            font-size: 24px;
+            text-align: center;
+            margin: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="traffic-light">
+        <div id="red" class="light"></div>
+        <div id="yellow" class="light"></div>
+        <div id="green" class="light"></div>
+    </div>
+    <div id="timer">8</div>
+    <button id="controlBtn">暂停</button>
+
+    <script>
+        /**
+         * 实现功能红绿灯功能
+         * 1.绿灯10s，黄灯2s，红灯8s
+         *  从红灯开始，绿灯，黄灯，红灯.. 循环
+         * 2.显示倒计时
+         * 3.实现按钮，能控制红绿灯的暂停和重启
+         */
+        //​红绿灯逻辑：
+        // 使用 CSS 的 active 类控制当前亮灯状态
+        // 状态顺序：红灯(8s) → 绿灯(10s) → 黄灯(2s) → 循环
+        // 颜色变化通过修改 DOM 元素的 class 实现
+        // ​倒计时系统：
+        // 每秒更新显示剩余时间
+        // 当倒计时归零时自动切换状态
+        // 时间显示在红绿灯下方
+        // ​控制功能：
+        // 通过按钮实现暂停/继续功能
+        // 使用 isRunning 状态变量控制运行状态
+        // 按钮文字在"暂停"和"继续"之间切换
+        // ​视觉设计：
+        // 使用圆形元素模拟交通灯
+        // 当前亮灯状态使用高透明度显示
+        // 非活动状态灯保持低透明度
+        // 平滑的颜色过渡效果
+
+        const lights = {
+            red: 8,
+            green: 10,
+            yellow: 2
+        };
+
+        let currentLight = 'red';
+        let remainingTime = lights.red;
+        let timer = null;
+        let isRunning = true;
+
+        // 状态切换逻辑
+        function changeLight() {
+            // 切换灯状态
+            document.querySelectorAll('.light').forEach(light => {
+                light.classList.remove('active');
+            });
+            document.getElementById(currentLight).classList.add('active');
+
+            // 状态切换逻辑
+            switch (currentLight) {
+                case 'red':
+                    currentLight = 'green';
+                    remainingTime = lights.green;
+                    break;
+                case 'green':
+                    currentLight = 'yellow';
+                    remainingTime = lights.yellow;
+                    break;
+                case 'yellow':
+                    currentLight = 'red';
+                    remainingTime = lights.red;
+                    break;
+            }
+
+            // 更新显示时间
+            document.getElementById('timer').textContent = remainingTime;
+        }
+
+        // 倒计时逻辑
+        function startTimer() {
+            if (!isRunning) return;
+
+            remainingTime--;
+            document.getElementById('timer').textContent = remainingTime;
+
+            if (remainingTime <= 0) {
+                changeLight();
+            }
+        }
+
+        // 控制按钮逻辑
+        document.getElementById('controlBtn').addEventListener('click', () => {
+            isRunning = !isRunning;
+            document.getElementById('controlBtn').textContent = isRunning ? '暂停' : '继续';
+        });
+
+        // 初始化
+        document.getElementById(currentLight).classList.add('active');
+
+        // 启动定时器
+        setInterval(() => {
+            if (isRunning) {
+                startTimer();
+            }
+        }, 1000);
+    </script>
+</body>
+
+</html>
