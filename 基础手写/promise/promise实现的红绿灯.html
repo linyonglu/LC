@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .traffic-light {
+            width: 120px;
+            background: #333;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px;
+        }
+
+        .light {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin: 10px 0;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+        }
+
+        .light.active {
+            opacity: 1;
+        }
+
+        #red {
+            background: #c0392b;
+        }
+
+        #yellow {
+            background: #f1c40f;
+        }
+
+        #green {
+            background: #2ecc71;
+        }
+
+        #timer {
+            font-size: 24px;
+            text-align: center;
+            margin: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+  </style>
+</head>
+<body>
+  <!-- HTML结构保持不变 -->
+  <div class="traffic-light">
+    <div id="red" class="light"></div>
+    <div id="yellow" class="light"></div>
+    <div id="green" class="light"></div>
+  </div>
+  <div id="timer">8</div>
+  <button id="controlBtn">暂停</button>
+
+  <script>
+//     红灯(8s) → Promise等待 → 绿灯(10s) → Promise等待 → 黄灯(2s)
+//    ↑_________________________________________|
+// ⚠️ 注意事项：
+// ​Promise 的自动回收
+// 虽然使用 while(true)，但每个 Promise 在完成后会被自动回收，不会造成内存泄漏
+
+// ​暂停状态的精确性
+// 暂停时倒计时会保持当前数值，但实际等待时间会延长（例如在还剩5秒时暂停1分钟，恢复后仍需等待5秒）
+
+// ​性能优化
+// 相比纯 setInterval 方案，Promise 链式调用在长时间运行中更稳定
+
+// 如果需要更精确的时间控制（例如需要支持暂停时保存剩余时间），可以结合 Date.now() 时间戳计算来实现更高级的时间管理。
+    class TrafficLight {
+      constructor() {
+        this.lights = {
+          red: { duration: 8, element: document.getElementById('red') },
+          green: { duration: 10, element: document.getElementById('green') },
+          yellow: { duration: 2, element: document.getElementById('yellow') }
+        };
+        this.currentLight = 'red';
+        this.isRunning = true;
+        this.timerElement = document.getElementById('timer');
+        this.controlBtn = document.getElementById('controlBtn');
+        this.initControls();
+      }
+
+      initControls() {
+        this.controlBtn.addEventListener('click', () => {
+          this.isRunning = !this.isRunning;
+          this.controlBtn.textContent = this.isRunning ? '暂停' : '继续';
+        });
+      }
+
+      // 核心方法：Promise驱动的状态切换
+      async start() {
+        while(true) {
+          await this.showLight(this.currentLight);
+          this.currentLight = this.getNextLight();
+        }
+      }
+
+      // 显示指定颜色的灯
+      showLight(color) {
+        return new Promise(async (resolve) => {
+          this.setActiveLight(color);
+          let remaining = this.lights[color].duration;
+
+          const updateTimer = () => {
+            this.timerElement.textContent = remaining;
+            if (remaining <= 0) {
+              clearInterval(interval);
+              resolve();
+            }
+            remaining--;
+          };
+
+          // 更精确的倒计时控制
+          const interval = setInterval(() => {
+            if (this.isRunning) updateTimer();
+          }, 1000);
+          
+          // 立即执行首次更新
+          updateTimer();
+        });
+      }
+
+      // 切换灯光激活状态
+      setActiveLight(color) {
+        Object.values(this.lights).forEach(light => {
+          light.element.classList.remove('active');
+        });
+        this.lights[color].element.classList.add('active');
+      }
+
+      // 获取下一个状态
+      getNextLight() {
+        const order = ['red', 'green', 'yellow'];
+        const index = order.indexOf(this.currentLight);
+        return order[(index + 1) % order.length];
+      }
+    }
+
+    // 启动红绿灯系统
+    const trafficLight = new TrafficLight();
+    trafficLight.start();
+  </script>
+</body>
+</html>
